@@ -18,56 +18,62 @@ function fetchDataAndDisplay() {
             data.forEach(stat => {
                 let blockCountry =
                     `<div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-4">
-                    <div class="card h-100">
-                        <img src="${stat.flags.png}" class="card-img-top flag-image" alt="${stat.name.official}">
-                        <div class="card-body">
-                            <h5 class="card-title fw-bold text-center mb-3">${stat.translations.ces.common}</h5>
-                            <p class="card-text">Population: ${stat.population}</p>
-                            <p class="card-text">Area: ${stat.area} km<sup>2</sup></p>
-                            <button class="btn btn-success show-details-btn custom-button" data-stat="${JSON.stringify(stat)}">Show Details</button>
-                            <div class="hidden-details" id="details-${stat.cca3}"></div>
+                        <div class="card h-100">
+                            <img src="${stat.flags.png}" class="card-img-top flag-image" alt="${stat.name.official}">
+                            <div class="card-body">
+                                <h5 class="card-title fw-bold text-center mb-3">${stat.translations.ces.common}</h5>
+                                <p class="card-text">Population: ${stat.population}</p>
+                                <p class="card-text">Area: ${stat.area} km<sup>2</sup></p>
+                                <button class="btn btn-success show-details-btn custom-button" data-stat='${JSON.stringify(stat)}'>Show Details</button>
+                                <div class="hidden-details" id="details-${stat.cca3}"></div>
+                            </div>
                         </div>
-                    </div>
-                </div>`;
+                    </div>`;
                 staty.innerHTML += blockCountry; // Přidání karty státu do divu
             });
 
-         // Přidání posluchače události pro každé tlačítko "Show Details"
-const showDetailsButtons = document.querySelectorAll('.show-details-btn');
-showDetailsButtons.forEach(button => {
-    button.addEventListener('click', () => {
-        const stat = JSON.parse(button.dataset.stat); // Získání dat o státu z atributu data-stat
-        showDetails(stat); // Zobrazení detailů státu
-    });
-});
-
-
-
+            // Po vytvoření všech karet států přidej posluchač události pro každé tlačítko "Show Details"
+            const showDetailsButtons = document.querySelectorAll('.show-details-btn');
+            showDetailsButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const stat = JSON.parse(button.dataset.stat); // Získání dat o státu z atributu data-stat
+                    showModalDetails(stat); // Zobrazení detailů státu v modálním okně
+                });
+            });
         });
 }
 
-// Funkce pro zobrazení detailů státu
-function showDetails(stat) {
-    const detailsContainer = document.getElementById(`details-${stat.cca3}`); // Získání reference na kontejner pro detaily státu
-    const currencyName = stat.currencies && stat.currencies.MDL ? stat.currencies.MDL.name : 'Unknown'; // Zjištění názvu měny
-    const currencySymbol = stat.currencies && stat.currencies.MDL ? stat.currencies.MDL.symbol : ''; // Zjištění symbolu měny
+// Funkce pro zobrazení detailů státu v modálním okně
+function showModalDetails(stat) {
+    // Vytvoření HTML obsahu pro modální okno s detaily státu
+    const modalContent = `
+        <div class="modal fade" id="statModal" tabindex="-1" aria-labelledby="statModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="statModalLabel">${stat.translations.ces.common}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <img src="${stat.flags.png}" class="flag-image" alt="${stat.name.official}">
+                        <p>Common Name: ${stat.name.common}</p>
+                        <p>Official Name: ${stat.name.official}</p>
+                        <p>Population: ${stat.population}</p>
+                        <p>Area: ${stat.area} km<sup>2</sup></p>
+                        <p>Capital: ${stat.capital}</p>
+                    </div>
+                </div>
+            </div>
+        </div>`;
 
-    // Přepne třídu pro zobrazení/ukrytí detailů
-    detailsContainer.classList.toggle('hidden-details');
+    // Vložení obsahu modálního okna do těla dokumentu
+    document.body.insertAdjacentHTML('beforeend', modalContent);
 
-    // Pokud detaily nejsou skryté, aktualizujeme jejich obsah
-    if (!detailsContainer.classList.contains('hidden-details')) {
-        // Vytvoření HTML kódu pro zobrazení detailů státu
-        detailsContainer.innerHTML = `
-            <img src="${stat.flags.png}" class="flag-image" alt="${stat.name.official}">
-            <p>Common Name: ${stat.name.common}</p>
-            <p>Official Name: ${stat.name.official}</p>
-            <p>Population: ${stat.population}</p>
-            <p>Area: ${stat.area} km<sup>2</sup></p>
-            <p>Capital: ${stat.capital}</p>
-            <p>Currency: ${currencyName} (${currencySymbol})</p>
-        `;
-    }
+    // Inicializace Bootstrap modálního okna
+    var modal = new bootstrap.Modal(document.getElementById('statModal'));
+
+    // Zobrazení modálního okna
+    modal.show();
 }
 
 // Po načtení dokumentu spusť funkci pro načtení a zobrazení dat
@@ -84,4 +90,6 @@ selContinent.addEventListener('change', function() {
 // Přidání posluchače události pro změnu URL adresy
 window.addEventListener('popstate', function() {
     fetchDataAndDisplay(); // Znovunačtení dat při změně URL adresy
-});
+});  
+
+
