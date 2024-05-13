@@ -1,8 +1,9 @@
+
 // Získání reference na elementy z HTML
 const staty = document.getElementById('staty'); // Div, kam se budou vkládat informace o státech
 const selContinent = document.getElementById('selContinent'); // Select pro výběr kontinentu
-
 let kontinent = 'europe'; // Inicializace proměnné kontinent na výchozí hodnotu 'europe'
+let activeModal = null; // Proměnná pro uchování reference na aktuální otevřené modální okno
 
 // Funkce pro načtení dat a zobrazení států
 function fetchDataAndDisplay() {
@@ -16,64 +17,101 @@ function fetchDataAndDisplay() {
 
             // Pro každý stát v datech vytvoříme HTML kód pro karta státu a vložíme ho do divu
             data.forEach(stat => {
-                let blockCountry =
-                    `<div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-4">
-                        <div class="card h-100">
-                            <img src="${stat.flags.png}" class="card-img-top flag-image" alt="${stat.name.official}">
+                let countryCard = `
+                    <div class="col-xl-2 col-lg-2 col-md-4 col-sm-6">      
+                        <div class="card h-100">     
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#${stat.cca2}Modal">    
+                            <img class="card-img-top p-3" src="${stat.flags.png}" alt="${stat.flags.alt}">
                             <div class="card-body">
-                                <h5 class="card-title fw-bold text-center mb-3">${stat.translations.ces.common}</h5>
-                                <p class="card-text">Population: ${stat.population}</p>
-                                <p class="card-text">Area: ${stat.area} km<sup>2</sup></p>
-                                <button class="btn btn-success show-details-btn custom-button" data-stat='${JSON.stringify(stat)}'>Show Details</button>
-                                <div class="hidden-details" id="details-${stat.cca3}"></div>
+                                <h4 class="card-title">${stat.translations.ces.common}</h4>
+                                </a>
+                                <p class="card-text">
+                                    Počet obyvatel: ${stat.population}<br>
+                                    Rozloha: ${stat.area} km<sup>2</sup>
+                                </p>
+                                <a href="#" class="show-details-link" data-bs-toggle="modal" data-bs-target="#${stat.cca2}Modal">Show Details</a>
                             </div>
                         </div>
                     </div>`;
-                staty.innerHTML += blockCountry; // Přidání karty státu do divu
+                let currencyNames = stat.currencies ? Object.values(stat.currencies).map(c => c.name).join(', ') : 'No currency data';
+                let currencySymbols = stat.currencies ? Object.values(stat.currencies).map(c => c.symbol).join(', ') : '';
+                let coatOfArms = stat.coatOfArms.png ? stat.coatOfArms.png : "";
+                let modal = `
+                    <div class="modal fade" id="${stat.cca2}Modal" tabindex="-1" role="dialog" aria-labelledby="${stat.cca2}ModalTitle" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                        <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">${stat.translations.ces.common}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="rowObrazky">
+                                <img class="card-img-top p-3" src="${stat.flags.png}" alt="${stat.flags.alt}">
+                                <img class="card-img-top p-3" src="${coatOfArms}">
+                            </div>
+                            <p><b>Oficiální název:</b> ${stat.translations.ces.official}</p>
+                            <p><b>Počet obyvatel:</b> ${stat.population}</p>
+                            <p><b>Rozloha:</b> ${stat.area} km<sup>2</sup></p>
+                            <p><b>Hlavní město:</b> ${stat.capital}</p>
+                            <p><b>Měna:</b> ${currencyNames} (${currencySymbols})</p>
+                            <p><a href="${stat.maps.googleMaps}" target="_blank">Zobrazit na mapě</a></p>
+                        </div>
+                        </div>
+                    </div>
+                    </div>
+                    `;
+                staty.innerHTML += countryCard + modal;
             });
 
-            // Po vytvoření všech karet států přidej posluchač události pro každé tlačítko "Show Details"
-            const showDetailsButtons = document.querySelectorAll('.show-details-btn');
-            showDetailsButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    const stat = JSON.parse(button.dataset.stat); // Získání dat o státu z atributu data-stat
-                    showModalDetails(stat); // Zobrazení detailů státu v modálním okně
-                });
+            // Inicializujeme modální dialogy
+            var modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                new bootstrap.Modal(modal);
             });
         });
 }
 
 // Funkce pro zobrazení detailů státu v modálním okně
 function showModalDetails(stat) {
+    // Zavřít aktuální otevřené modální okno, pokud existuje
+    if (activeModal) {
+        activeModal.hide();
+        activeModal = null;
+    }
+
     // Vytvoření HTML obsahu pro modální okno s detaily státu
-    const modalContent = `
-        <div class="modal fade" id="statModal" tabindex="-1" aria-labelledby="statModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="statModalLabel">${stat.translations.ces.common}</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <img src="${stat.flags.png}" class="flag-image" alt="${stat.name.official}">
-                        <p>Common Name: ${stat.name.common}</p>
-                        <p>Official Name: ${stat.name.official}</p>
-                        <p>Population: ${stat.population}</p>
-                        <p>Area: ${stat.area} km<sup>2</sup></p>
-                        <p>Capital: ${stat.capital}</p>
-                    </div>
-                </div>
+    let currencyNames = stat.currencies ? Object.values(stat.currencies).map(c => c.name).join(', ') : 'No currency data';
+    let currencySymbols = stat.currencies ? Object.values(stat.currencies).map(c => c.symbol).join(', ') : '';
+    let coatOfArms = stat.coatOfArms.png ? stat.coatOfArms.png : "";
+    let modalContent = `
+        <div class="modal fade" id="${stat.cca2}Modal" tabindex="-1" role="dialog" aria-labelledby="${stat.cca2}ModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">${stat.translations.ces.common}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-        </div>`;
+            <div class="modal-body">
+                <div class="rowObrazky">
+                    <img class="card-img-top p-3" src="${stat.flags.png}" alt="${stat.flags.alt}">
+                    <img class="card-img-top p-3" src="${coatOfArms}">
+                </div>
+                <p><b>Oficiální název:</b> ${stat.translations.ces.official}</p>
+                <p><b>Počet obyvatel:</b> ${stat.population}</p>
+                <p><b>Rozloha:</b> ${stat.area} km<sup>2</sup></p>
+                <p><b>Hlavní město:</b> ${stat.capital}</p>
+                <p><b>Měna:</b> ${currencyNames} (${currencySymbols})</p>
+                <p><a href="${stat.maps.googleMaps}" target="_blank">Zobrazit na mapě</a></p>
+            </div>
+            </div>
+        </div>
+        </div>
+    `;
 
-    // Vložení obsahu modálního okna do těla dokumentu
+    // Vložení obsahu modálního okna do těla dokumentu a inicializace modálního okna
     document.body.insertAdjacentHTML('beforeend', modalContent);
-
-    // Inicializace Bootstrap modálního okna
-    var modal = new bootstrap.Modal(document.getElementById('statModal'));
-
-    // Zobrazení modálního okna
-    modal.show();
+    activeModal = new bootstrap.Modal(document.getElementById(`${stat.cca2}Modal`));
+    activeModal.show();
 }
 
 // Po načtení dokumentu spusť funkci pro načtení a zobrazení dat
@@ -90,6 +128,9 @@ selContinent.addEventListener('change', function() {
 // Přidání posluchače události pro změnu URL adresy
 window.addEventListener('popstate', function() {
     fetchDataAndDisplay(); // Znovunačtení dat při změně URL adresy
-});  
+});
+
+
+ 
 
 

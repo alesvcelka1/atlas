@@ -51,3 +51,10 @@ footer {
 .custom-button:hover {
     background-color: #2c3e50;
 }
+a.show-details-link {
+    color: transparent; 
+    text-decoration: none; 
+}
+.show-details-link {
+    display: none;
+}
