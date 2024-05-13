@@ -1,5 +1,4 @@
-
-// Získání reference na elementy z HTML
+// Získání reference na elementy z HTMLL
 const staty = document.getElementById('staty'); // Div, kam se budou vkládat informace o státech
 const selContinent = document.getElementById('selContinent'); // Select pro výběr kontinentu
 let kontinent = 'europe'; // Inicializace proměnné kontinent na výchozí hodnotu 'europe'
